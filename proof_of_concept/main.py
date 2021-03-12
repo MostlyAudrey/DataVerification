@@ -1,5 +1,9 @@
 #/usr/bin/python3
 
+import hashlib
+import node
+
+
 Cities = [
 ( 1, 'Baltimore', 'MD', 'US' ),
 ( 2, 'Atlanta',   'GA', 'US' ),
@@ -8,7 +12,7 @@ Cities = [
 ( 5, 'Paris',     'P',  'FR')
 ]
 
-Client = [
+Clients = [
 ( 1, 'Joy Arulraj',             35, '1 North Ave',              2, ' 30332'),
 ( 2, 'Bob Waters',              86, '123 Marietta St.',         4, ' 30341'),
 ( 3, 'Bill Leahy',              69, 'A nice beach somewhere',   3, ' 30312'),
@@ -49,7 +53,7 @@ LineItems = [
 Products = [
 ( 1,   'Garden Hose',         'Plant inc.'       ),
 ( 2,   'Garden Hose',         'Plant inc.'       ),
-( 12,  'Strawberry Poptarts', 'Kellogs'         ),
+( 12,  'Strawberry Poptarts', 'Kellogs'          ),
 ( 13,  'BlueBerry Poptarts',  'Kellogs'          ),
 ( 14,  'Strawberry Poptarts', 'Kellogs'          ),
 ( 15,  'Strawberry Poptarts', 'Kellogs'          ),
@@ -65,3 +69,18 @@ Products = [
 ( 106, 'Honey Nut Cherios',   'General Mills'    ),
 ( 107, 'Honey Nut Cherios',   'General Mills'    ),
 ]
+
+
+
+def CreateOrder(order_id, line_item_ids):
+
+    client_id = Orders[order_id][1]
+
+    client_node = node.LeafNode('tb_client', client_id, hashlib.sha256( str(Clients[client_id]).encode() ) )
+    order_node  = node.LeafNode('tb_order',  order_id,  hashlib.sha256( str(Orders[order_id]).encode() ) )
+    print(client_node)
+    print(order_node)
+
+
+
+CreateOrder(1, [1,2,3])
