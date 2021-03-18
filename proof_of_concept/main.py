@@ -117,7 +117,7 @@ treeNodes = []
 root_node = None
 def CreateTree(leaf_nodes):
 	global treeNodes, root_node
-	
+
 	if len(leaf_nodes) == 1:
 		root_node = leaf_nodes[0]
 		treeNodes.append(root_node)
@@ -131,13 +131,30 @@ def CreateTree(leaf_nodes):
 		if (i + 1) < len(leaf_nodes):
 			rchild = leaf_nodes[i + 1]
 
-		pnode = InnerNode(lchild, hashlib.sha256(str(lchild).encode()), rchild, hashlib.sha256(str(rchild).encode()))
+		num_leaf_nodes = 0
+		if isinstance(lchild, LeafNode):
+			if (rchild is not None):
+				num_leaf_nodes = 2 
+			else:
+				num_leaf_nodes = 1
+		else:
+			if (rchild is not None):
+				num_leaf_nodes = lchild.GetNumLeafNodes() + rchild.GetNumLeafNodes() 
+			else:
+				num_leaf_nodes = lchild.GetNumLeafNodes()
+		pnode = InnerNode(lchild, hashlib.sha256(str(lchild).encode()), rchild, hashlib.sha256(str(rchild).encode()), num_leaf_nodes)
 		print(pnode)
 		parent_nodes.append(pnode)
 		i += 2
 
 	treeNodes += parent_nodes
 	CreateTree(parent_nodes)
+
+
+def CheckTreeIndex(root, tree_index, tuple):
+	return
+
+
 
 leaf_nodes = CreateOrder(1)
 print(leaf_nodes)
