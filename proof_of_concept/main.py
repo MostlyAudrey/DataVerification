@@ -113,14 +113,12 @@ def CreateOrder(order_id):
     	# print(node)
     return leaf_nodes
 
-treeNodes = []
 root_node = None
 def CreateTree(leaf_nodes):
-	global treeNodes, root_node
+	global root_node
 
 	if len(leaf_nodes) == 1:
 		root_node = leaf_nodes[0]
-		treeNodes.append(root_node)
 		return
 
 	parent_nodes = []
@@ -147,7 +145,6 @@ def CreateTree(leaf_nodes):
 		parent_nodes.append(pnode)
 		i += 2
 
-	treeNodes += parent_nodes
 	CreateTree(parent_nodes)
 
 
