@@ -154,9 +154,11 @@ def CreateTree(leaf_nodes):
 def CheckTreeIndex(root, tree_index, tuple):
 	return
 
+trees = {}
+for order in Orders:
+	leaf_nodes = CreateOrder(order[0])
+	print(leaf_nodes)
+	CreateTree(leaf_nodes)
+	trees[order[0]] = root_node
 
-
-leaf_nodes = CreateOrder(1)
-print(leaf_nodes)
-CreateTree(leaf_nodes)
-print(treeNodes)
+print(trees)
