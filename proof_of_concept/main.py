@@ -4,92 +4,15 @@ import hashlib
 from node import LeafNode, InnerNode
 
 
-# Cities = [
-# ( 1, 'Baltimore', 'MD', 'US' ),
-# ( 2, 'Atlanta',   'GA', 'US' ),
-# ( 3, 'Dallas',    'TX', 'US' ),
-# ( 4, 'Demoins',   'IO', 'US' ),
-# ( 5, 'Paris',     'P',  'FR')
-# ]
-
-# Clients = [
-# ( 1, 'Joy Arulraj',             35, '1 North Ave',              2, ' 30332'),
-# ( 2, 'Bob Waters',              86, '123 Marietta St.',         4, ' 30341'),
-# ( 3, 'Bill Leahy',              69, 'A nice beach somewhere',   3, ' 30312'),
-# ( 4, 'Kishore Ramachandrian',   41, '2 Clough Lane',            2, ' 12423'),
-# ]
-
-# Orders = [
-# ( 1, 1, '2021-02-10' ),
-# ( 2, 1, '2021-02-13' ),
-# ( 3, 2, '2021-02-18' ),
-# ( 4, 4, '2021-02-19' ),
-# ( 5, 1, '2021-02-29' ),
-# ( 6, 3, '2021-03-08' ),
-# ( 7, 2, '2021-03-12' ),
-# ]
-
-# LineItems = [
-# ( 1,  1, 1,   15, 33.00 ),
-# ( 2,  1, 12,  2,  5.00  ),
-# ( 3,  1, 101, 20, 3.75  ),
-# ( 4,  2, 1,   15, 33.00 ),
-# ( 5,  2, 12,  2,  5.00  ),
-# ( 6,  2, 101, 20, 3.75  ),
-# ( 7,  2, 1,   15, 33.00 ),
-# ( 8,  3, 12,  2,  5.00  ),
-# ( 9,  3, 101, 20, 3.75  ),
-# ( 10, 4, 1,   15, 33.00 ),
-# ( 11, 5, 12,  2,  5.00  ),
-# ( 12, 5, 101, 20, 3.75  ),
-# ( 13, 5, 1,   15, 33.00 ),
-# ( 14, 5, 12,  2,  5.00  ),
-# ( 15, 6, 101, 20, 3.75  ),
-# ( 16, 6, 1,   15, 33.00 ),
-# ( 17, 6, 12,  2,  5.00  ),
-# ( 18, 7, 101, 20, 3.75  ),
-# ]
-
-# Products = [
-# ( 1,   'Garden Hose',         'Plant inc.'       ),
-# ( 2,   'Garden Hose',         'Plant inc.'       ),
-# ( 12,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 13,  'BlueBerry Poptarts',  'Kellogs'          ),
-# ( 14,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 15,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 16,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 17,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 18,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 19,  'Strawberry Poptarts', 'Kellogs'          ),
-# ( 101, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 102, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 103, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 104, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 105, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 106, 'Honey Nut Cherios',   'General Mills'    ),
-# ( 107, 'Honey Nut Cherios',   'General Mills'    ),
-# ]
-
-
-
-# def CreateOrder(order_id, line_item_ids):
-
-#     client_id = Orders[order_id - 1][1]
-
-#     client_node = node.LeafNode('tb_client', client_id, hashlib.sha256( str(Clients[client_id]).encode() ) )
-#     order_node  = node.LeafNode('tb_order',  order_id,  hashlib.sha256( str(Orders[order_id]).encode() ) )
-#     print(client_node)
-#     print(order_node)
-
-# CreateOrder(1, [1,2,3])
-
 Cities = []
 Clients = []
 Orders = []
 LineItems = []
 Products = []
+InnerNodes = []
+LeafNodes = []
 
-def CreateOrder(order_id):
+def CreateLeafNodes(order_id):
 	order = Orders[order_id - 1]
 	client = Clients[order[1] - 1]
 	city = Cities[client[4] - 1]
@@ -114,44 +37,46 @@ def CreateOrder(order_id):
 		elif data in Products:
 			table = 'tb_product'
 
-		node = LeafNode(table, data[0], hashlib.sha256(str(data).encode()))
-		leaf_nodes.append(node)
+		node = LeafNode(table, data[0], hashlib.sha256(str(data).encode()).hexdigest())
+		leaf_nodes.append(len(LeafNodes))
+		LeafNodes.append(node)
 		# print(node)
 	return leaf_nodes
 
-root_node = None
-def CreateTree(leaf_nodes):
-	global root_node
+def CreateTree(child_nodes, are_leaves):
 
-	if len(leaf_nodes) == 1:
-		root_node = leaf_nodes[0]
-		return
+	if len(child_nodes) == 1:
+		return leaf_nodes[0]
 
 	parent_nodes = []
 	i = 0
-	while i < len(leaf_nodes):
-		lchild = leaf_nodes[i]
+	while i < len(child_nodes):
+		lchild = child_nodes[i]
 		rchild = None
-		if (i + 1) < len(leaf_nodes):
-			rchild = leaf_nodes[i + 1]
+		if (i + 1) < len(child_nodes):
+			rchild = child_nodes[i + 1]
 
-		num_leaf_nodes = 0
-		if isinstance(lchild, LeafNode):
-			if (rchild is not None):
-				num_leaf_nodes = 2 
-			else:
-				num_leaf_nodes = 1
+		left_child_data, right_child_data, num_leaf_nodes = None, str(None).encode(), 1
+
+		if are_leaves:
+			left_child_data = str(LeafNodes[lchild]).encode()
+			if rchild is not None:
+				num_leaf_nodes = 2
+				right_child_data = str(LeafNodes[rchild]).encode()
 		else:
-			if (rchild is not None):
-				num_leaf_nodes = lchild.GetNumLeafNodes() + rchild.GetNumLeafNodes() 
-			else:
-				num_leaf_nodes = lchild.GetNumLeafNodes()
-		pnode = InnerNode(lchild, hashlib.sha256(str(lchild).encode()), rchild, hashlib.sha256(str(rchild).encode()), num_leaf_nodes)
-		print(pnode)
-		parent_nodes.append(pnode)
+			num_leaf_nodes = InnerNodes[lchild].GetNumLeafNodes()
+			left_child_data = str(InnerNodes[lchild]).encode()
+
+			if rchild is not None:
+				num_leaf_nodes += InnerNodes[rchild].GetNumLeafNodes() 
+				right_child_data = str(InnerNodes[rchild]).encode()
+
+		pnode = InnerNode(lchild, hashlib.sha256(left_child_data).hexdigest(), rchild, hashlib.sha256(right_child_data).hexdigest(), num_leaf_nodes)
+		parent_nodes.append(len(InnerNodes))
+		InnerNodes.append(pnode)
 		i += 2
 
-	CreateTree(parent_nodes)
+	return CreateTree(parent_nodes, False)
 
 
 def CheckTreeIndex(root, tree_index, tuple):
@@ -160,48 +85,53 @@ def CheckTreeIndex(root, tree_index, tuple):
 def tformat(tuple):
 	return [int(x) if x.isdigit() else x for x in tuple]
 
-cities_file = open("Mock_DB/Cities.csv", 'r')
-clients_file = open("Mock_DB/Clients.csv", 'r')
-orders_file = open("Mock_DB/Orders.csv", 'r')
-lineitems_file = open("Mock_DB/LineItems.csv", 'r')
-products_file = open("Mock_DB/Products.csv", 'r')
+with open("Mock_DB/Cities.csv", 'r') as cities_file:
+	cities_file.readline()
+	for line in cities_file.readlines():
+		tup = tformat(tuple(line.strip().split(',')))
+		Cities.append(tup)
 
-cities_file.readline()
-for line in cities_file.readlines():
-	tup = tformat(tuple(line.strip().split(',')))
-	Cities.append(tup)
+with open("Mock_DB/Clients.csv", 'r') as clients_file:
+	clients_file.readline()
+	for line in clients_file.readlines():
+		tup = tformat(tuple(line.strip().split(',')))
+		Clients.append(tup)
 
-clients_file.readline()
-for line in clients_file.readlines():
-	tup = tformat(tuple(line.strip().split(',')))
-	Clients.append(tup)
+with open("Mock_DB/Orders.csv", 'r') as orders_file:
+	orders_file.readline()
+	for line in orders_file.readlines():
+		tup = tformat(tuple(line.strip().split(',')))
+		Orders.append(tup)
 
-orders_file.readline()
-for line in orders_file.readlines():
-	tup = tformat(tuple(line.strip().split(',')))
-	Orders.append(tup)
+with open("Mock_DB/LineItems.csv", 'r') as line_items_file: 
+	line_items_file.readline()
+	for line in line_items_file.readlines():
+		tup = tformat(tuple(line.strip().split(',')))
+		LineItems.append(tup)
 
-lineitems_file.readline()
-for line in lineitems_file.readlines():
-	tup = tformat(tuple(line.strip().split(',')))
-	LineItems.append(tup)
-
-products_file.readline()
-for line in products_file.readlines():
-	tup = tformat(tuple(line.strip().split(',')))
-	Products.append(tup)
-
-cities_file.close()
-clients_file.close()
-orders_file.close()
-lineitems_file.close()
-products_file.close()
+with open("Mock_DB/Products.csv", 'r') as products_file:
+	products_file.readline()
+	for line in products_file.readlines():
+		tup = tformat(tuple(line.strip().split(',')))
+		Products.append(tup)
 
 trees = {}
+
 for order in Orders:
-	leaf_nodes = CreateOrder(order[0])
+	leaf_nodes = CreateLeafNodes(order[0])
 	print(leaf_nodes)
-	CreateTree(leaf_nodes)
-	trees[order[0]] = root_node
+	trees[order[0]] = CreateTree(leaf_nodes, True)
+
+
+with open("Mock_DB/InnerNodes.csv", 'w') as inner_nodes_file:
+	for node in InnerNodes:
+		inner_nodes_file.write('{},{},{},{},{}\n'.format(node.left_child_pk, node.left_child_hash, node.right_child_pk, node.right_child_hash, node.num_leaf_nodes))
+
+with open("Mock_DB/LeafNodes.csv", 'w') as leaf_nodes_file:
+	for node in LeafNodes:
+		leaf_nodes_file.write('{},{},{}\n'.format(node.table, node.primary_key, node.data_hash))
+
+
+
 
 print(trees)
