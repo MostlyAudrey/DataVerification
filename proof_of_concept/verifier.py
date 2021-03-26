@@ -6,8 +6,13 @@ import linecache
 
 from node import LeafNode, InnerNode
 
-InnerNodeFile = "Mock_DB/InnerNodes.csv"
-LeafNodeFile = "Mock_DB/LeafNodes.csv"
+InnerNodeFile = "../Mock_DB/InnerNodes.csv"
+LeafNodeFile = "../Mock_DB/LeafNodes.csv"
+CitiesFile = "../Mock_DB/Cities.csv"
+ClientsFile = "../Mock_DB/Clients.csv"
+LineItemsFile = "../Mock_DB/LineItems.csv"
+OrdersFile = "../Mock_DB/Orders.csv"
+ProductsFile = "../Mock_DB/Products.csv"
 InnerNodes = {}
 LeafNodes = {}
 
@@ -57,18 +62,31 @@ def verifyChildren(root_node_pk):
 				return verifyChildren(root.left_child_pk)
 			else: return False
 
+
+
 		if root.right_child_pk is not None:
 			rc = LeafNodes[root.right_child_pk]
 			# print('RC: {}: {}'.format(root.right_child_pk, rc))
 			# print( '{}: {}'.format( rc.GetHash(), root.right_child_hash))
 			if rc.GetHash() != root.right_child_hash: return False
+
+		return verifyTupleData(lc) and verifyTupleData(rc)
+
+def getTableFile(table_name):
+    switcher = {
+        "tb_order": OrdersFile,
+        "tb_city": CitiesFile,
+        "tb_product": ProductsFile,
+        "tb_lineitem": LineItemsFile,
+        "tb_client": ClientsFile
+    }
+    return switcher.get(table_name, None)
+
+def verifyTupleData(leaf_node_pk):
+	node = LeafNodes[leaf_node_pk]
+	tableFile = getTableFile(node.table)
+	tuple_data = linecache.getline(tableFile, node.primary_key).strip().split(',')
 	return True
-
-
-
-
-def verifyTupleData(node):
-	print("HIOKS")
 
 
 def fail(msg="The data could not be verified, data may have been tampered with"):
@@ -99,25 +117,17 @@ def main(order_id, root_hash):
 	# 2. Recursively load all Inner and Leaf Nodes into memory
 	loadChildren(root_node_pk, False)
 
+
 	# 3. Verify the root node matches the provided hash
 	
 	if root_hash != InnerNodes[root_node_pk].GetHash():
 		fail("Root hashes do not match, data may have been tampered with")
 		
 
-	# 4. Recursively verify the contents of all of the Inner Nodes
+	# 4. Recursively verify the contents of all of the nodes
 
 	if not verifyChildren(root_node_pk):
 		fail()
-
-
-	# 5. Load and verify the tuple data in each leaf node
-
-	# for node in LeafNodes:
-	# 	if not verifyTupleData(node): 
-	# 		fail()
-	
-
 
 	print("The data has been verified, the order has not been tampered with")
 
