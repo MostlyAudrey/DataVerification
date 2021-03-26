@@ -36,7 +36,7 @@ def CreateLeafNodes(order_id):
 			table = 'tb_lineitem'
 		elif data in Products:
 			table = 'tb_product'
-
+		print(str(data))
 		node = LeafNode(table, data[0], hashlib.sha256(str(data).encode()).hexdigest())
 		leaf_nodes.append(len(LeafNodes))
 		LeafNodes.append(node)
@@ -85,31 +85,31 @@ def CheckTreeIndex(root, tree_index, tuple):
 def tformat(tuple):
 	return [int(x) if x.isdigit() else x for x in tuple]
 
-with open("Mock_DB/Cities.csv", 'r') as cities_file:
+with open("../Mock_DB/Cities.csv", 'r') as cities_file:
 	cities_file.readline()
 	for line in cities_file.readlines():
 		tup = tformat(tuple(line.strip().split(',')))
 		Cities.append(tup)
 
-with open("Mock_DB/Clients.csv", 'r') as clients_file:
+with open("../Mock_DB/Clients.csv", 'r') as clients_file:
 	clients_file.readline()
 	for line in clients_file.readlines():
 		tup = tformat(tuple(line.strip().split(',')))
 		Clients.append(tup)
 
-with open("Mock_DB/Orders.csv", 'r') as orders_file:
+with open("../Mock_DB/Orders.csv", 'r') as orders_file:
 	orders_file.readline()
 	for line in orders_file.readlines():
 		tup = tformat(tuple(line.strip().split(',')))
 		Orders.append(tup)
 
-with open("Mock_DB/LineItems.csv", 'r') as line_items_file: 
+with open("../Mock_DB/LineItems.csv", 'r') as line_items_file: 
 	line_items_file.readline()
 	for line in line_items_file.readlines():
 		tup = tformat(tuple(line.strip().split(',')))
 		LineItems.append(tup)
 
-with open("Mock_DB/Products.csv", 'r') as products_file:
+with open("../Mock_DB/Products.csv", 'r') as products_file:
 	products_file.readline()
 	for line in products_file.readlines():
 		tup = tformat(tuple(line.strip().split(',')))
@@ -122,17 +122,17 @@ for order in Orders:
 	trees[order[0]] = CreateTree(leaf_nodes, True)
 
 
-with open("Mock_DB/InnerNodes.csv", 'w') as inner_nodes_file:
+with open("../Mock_DB/InnerNodes.csv", 'w') as inner_nodes_file:
 	inner_nodes_file.write('left_child_pk, left_child_hash, right_child_pk, right_child_hash, num_leaf_nodes\n')
 	for node in InnerNodes:
 		inner_nodes_file.write('{},{},{},{},{}\n'.format(node.left_child_pk, node.left_child_hash, node.right_child_pk, node.right_child_hash, node.num_leaf_nodes))
 
-with open("Mock_DB/LeafNodes.csv", 'w') as leaf_nodes_file:
+with open("../Mock_DB/LeafNodes.csv", 'w') as leaf_nodes_file:
 	leaf_nodes_file.write('table, primary_key_value, data hash\n')
 	for node in LeafNodes:
 		leaf_nodes_file.write('{},{},{}\n'.format(node.table, node.primary_key, node.data_hash))
 
-with open("Mock_DB/order_root_node.csv", 'w') as order_root_node:
+with open("../Mock_DB/order_root_node.csv", 'w') as order_root_node:
 	order_root_node.write('order_id, root_node\n')
 	for order_id in trees:
 		order_root_node.write('{},{}\n'.format(order_id, trees[order_id]))
