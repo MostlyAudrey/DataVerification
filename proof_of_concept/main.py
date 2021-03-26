@@ -46,7 +46,7 @@ def CreateLeafNodes(order_id):
 def CreateTree(child_nodes, are_leaves):
 
 	if len(child_nodes) == 1:
-		return leaf_nodes[0]
+		return len(InnerNodes) - 1
 
 	parent_nodes = []
 	i = 0
@@ -56,22 +56,22 @@ def CreateTree(child_nodes, are_leaves):
 		if (i + 1) < len(child_nodes):
 			rchild = child_nodes[i + 1]
 
-		left_child_data, right_child_data, num_leaf_nodes = None, str(None).encode(), 1
+		left_child_hash, right_child_hash, num_leaf_nodes = None, None, 1
 
 		if are_leaves:
-			left_child_data = str(LeafNodes[lchild]).encode()
+			left_child_hash = LeafNodes[lchild].GetHash()
 			if rchild is not None:
 				num_leaf_nodes = 2
-				right_child_data = str(LeafNodes[rchild]).encode()
+				right_child_hash = LeafNodes[rchild].GetHash()
 		else:
 			num_leaf_nodes = InnerNodes[lchild].GetNumLeafNodes()
-			left_child_data = str(InnerNodes[lchild]).encode()
+			left_child_hash = InnerNodes[lchild].GetHash()
 
 			if rchild is not None:
 				num_leaf_nodes += InnerNodes[rchild].GetNumLeafNodes() 
-				right_child_data = str(InnerNodes[rchild]).encode()
+				right_child_hash = InnerNodes[rchild].GetHash()
 
-		pnode = InnerNode(lchild, hashlib.sha256(left_child_data).hexdigest(), rchild, hashlib.sha256(right_child_data).hexdigest(), num_leaf_nodes)
+		pnode = InnerNode(lchild, left_child_hash, rchild, right_child_hash, num_leaf_nodes)
 		parent_nodes.append(len(InnerNodes))
 		InnerNodes.append(pnode)
 		i += 2
@@ -119,19 +119,21 @@ trees = {}
 
 for order in Orders:
 	leaf_nodes = CreateLeafNodes(order[0])
-	print(leaf_nodes)
 	trees[order[0]] = CreateTree(leaf_nodes, True)
 
 
 with open("Mock_DB/InnerNodes.csv", 'w') as inner_nodes_file:
+	inner_nodes_file.write('left_child_pk, left_child_hash, right_child_pk, right_child_hash, num_leaf_nodes\n')
 	for node in InnerNodes:
 		inner_nodes_file.write('{},{},{},{},{}\n'.format(node.left_child_pk, node.left_child_hash, node.right_child_pk, node.right_child_hash, node.num_leaf_nodes))
 
 with open("Mock_DB/LeafNodes.csv", 'w') as leaf_nodes_file:
+	leaf_nodes_file.write('table, primary_key_value, data hash\n')
 	for node in LeafNodes:
 		leaf_nodes_file.write('{},{},{}\n'.format(node.table, node.primary_key, node.data_hash))
 
-
-
-
-print(trees)
+with open("Mock_DB/order_root_node.csv", 'w') as order_root_node:
+	order_root_node.write('order_id, root_node\n')
+	for order_id in trees:
+		order_root_node.write('{},{}\n'.format(order_id, trees[order_id]))
+		print ('{}, Hash = {}'.format(order_id, InnerNodes[trees[order_id]].GetHash()))
