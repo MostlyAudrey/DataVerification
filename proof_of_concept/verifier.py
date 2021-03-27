@@ -16,6 +16,15 @@ ProductsFile = "../Mock_DB/Products.csv"
 InnerNodes = {}
 LeafNodes = {}
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def tformat(tuple):
 	return [int(x) if x.isdigit() else True if x == 'True' else False if x == 'False' else x for x in tuple]
 
@@ -89,7 +98,7 @@ def verifyTupleData(leaf_node):
 
 
 def fail(msg="The data could not be verified, data may have been tampered with"):
-	print(msg)
+	print(f"{bcolors.FAIL}"+msg+f"{bcolors.ENDC}")
 	exit()
 
 
@@ -126,7 +135,7 @@ def main(order_id, root_hash):
 	if not verifyChildren(root_node_pk):
 		fail()
 
-	print("The data has been verified, the order has not been tampered with")
+	print(f"{bcolors.OKGREEN}The data has been verified, the order has not been tampered with")
 
 
 if __name__ == '__main__':
