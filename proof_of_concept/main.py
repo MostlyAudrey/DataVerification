@@ -36,11 +36,9 @@ def CreateLeafNodes(order_id):
 			table = 'tb_lineitem'
 		elif data in Products:
 			table = 'tb_product'
-		print(str(data))
 		node = LeafNode(table, data[0], hashlib.sha256(str(data).encode()).hexdigest())
 		leaf_nodes.append(len(LeafNodes))
 		LeafNodes.append(node)
-		# print(node)
 	return leaf_nodes
 
 def CreateTree(child_nodes, are_leaves):
@@ -71,7 +69,7 @@ def CreateTree(child_nodes, are_leaves):
 				num_leaf_nodes += InnerNodes[rchild].GetNumLeafNodes() 
 				right_child_hash = InnerNodes[rchild].GetHash()
 
-		pnode = InnerNode(lchild, left_child_hash, rchild, right_child_hash, num_leaf_nodes)
+		pnode = InnerNode(lchild, left_child_hash, rchild, right_child_hash, num_leaf_nodes, are_leaves)
 		parent_nodes.append(len(InnerNodes))
 		InnerNodes.append(pnode)
 		i += 2
@@ -125,7 +123,7 @@ for order in Orders:
 with open("../Mock_DB/InnerNodes.csv", 'w') as inner_nodes_file:
 	inner_nodes_file.write('left_child_pk, left_child_hash, right_child_pk, right_child_hash, num_leaf_nodes\n')
 	for node in InnerNodes:
-		inner_nodes_file.write('{},{},{},{},{}\n'.format(node.left_child_pk, node.left_child_hash, node.right_child_pk, node.right_child_hash, node.num_leaf_nodes))
+		inner_nodes_file.write('{},{},{},{},{},{}\n'.format(node.left_child_pk, node.left_child_hash, node.right_child_pk, node.right_child_hash, node.num_leaf_nodes,node.children_are_leaves))
 
 with open("../Mock_DB/LeafNodes.csv", 'w') as leaf_nodes_file:
 	leaf_nodes_file.write('table, primary_key_value, data hash\n')

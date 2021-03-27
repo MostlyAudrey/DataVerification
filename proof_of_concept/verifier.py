@@ -17,19 +17,19 @@ InnerNodes = {}
 LeafNodes = {}
 
 def tformat(tuple):
-	return [int(x) if x.isdigit() else x for x in tuple]
+	return [int(x) if x.isdigit() else True if x == 'True' else False if x == 'False' else x for x in tuple]
 
 def loadChildren(root_node_pk, is_leaf):
 	if root_node_pk is None or root_node_pk == "None": return
 	if not is_leaf:
-		lc, lc_hash, rc, rc_hash, num_leaves = tformat(tuple(linecache.getline(InnerNodeFile, root_node_pk + 2).strip().split(',')))
+		lc, lc_hash, rc, rc_hash, num_leaves, children_are_leaves = tformat(tuple(linecache.getline(InnerNodeFile, root_node_pk + 2).strip().split(',')))
 		if rc == "None": rc, rc_hash = None, None
 		if root_node_pk in InnerNodes: return
-		InnerNodes[root_node_pk] = InnerNode(lc, lc_hash, rc, rc_hash, num_leaves)
+		InnerNodes[root_node_pk] = InnerNode(lc, lc_hash, rc, rc_hash, num_leaves, children_are_leaves)
 		# print('{}:{}'.format(root_node_pk, InnerNodes[root_node_pk]))
-		loadChildren(lc, int(num_leaves) == 2)
+		loadChildren(lc, children_are_leaves )
 		if rc != "None":
-			loadChildren(rc, int(num_leaves) <= 2)
+			loadChildren(rc, children_are_leaves)
 	else:
 		table, primary_key, data_hash = tformat(tuple(linecache.getline(LeafNodeFile, root_node_pk + 2).strip().split(',')))
 		LeafNodes[root_node_pk] = LeafNode(table, primary_key, data_hash)
@@ -37,14 +37,12 @@ def loadChildren(root_node_pk, is_leaf):
 def verifyChildren(root_node_pk):
 	if root_node_pk is None or root_node_pk == "None": return True
 	root = InnerNodes[root_node_pk]
-	# print("Verifying node{}".format(root_node_pk))
-	if (root.num_leaf_nodes > 2):
+	if not root.children_are_leaves:
 		lc = InnerNodes[root.left_child_pk]	
 		# print('LC: {}: {}'.format(root.left_child_pk, lc))
 		# print( '{}: {}'.format( lc.GetHash(), root.left_child_hash))
 		if lc.GetHash() != root.left_child_hash: return False
-
-		if root.right_child_pk != "None":
+		if root.right_child_pk != "None" and root.right_child_pk is not None:
 			rc = InnerNodes[root.right_child_pk]
 			# print('RC: {}: {}'.format(root.right_child_pk, rc))
 			# print( '{}: {}'.format( rc.GetHash(), root.right_child_hash))
@@ -52,15 +50,10 @@ def verifyChildren(root_node_pk):
 
 		return verifyChildren(root.left_child_pk) and verifyChildren(root.right_child_pk)
 	else:
-		lc = LeafNodes[root.left_child_pk]	
+		lc, rc = LeafNodes[root.left_child_pk], None
 		# print('LC: {}: {}'.format(root.left_child_pk, lc))
 		# print( '{}: {}'.format( lc.GetHash(), root.left_child_hash))
-		if lc.GetHash() != root.left_child_hash: 
-			if root.num_leaf_nodes == 1:
-				lc_i = InnerNodes[root.left_child_pk]
-				if lc_i.GetHash() != root.left_child_hash: return False
-				return verifyChildren(root.left_child_pk)
-			else: return False
+		if lc.GetHash() != root.left_child_hash: return False
 
 
 
@@ -82,11 +75,17 @@ def getTableFile(table_name):
     }
     return switcher.get(table_name, None)
 
-def verifyTupleData(leaf_node_pk):
-	node = LeafNodes[leaf_node_pk]
-	tableFile = getTableFile(node.table)
-	tuple_data = linecache.getline(tableFile, node.primary_key).strip().split(',')
-	return True
+def verifyTupleData(leaf_node):
+	if leaf_node is None: return True
+	tableFile, tuple_data = getTableFile(leaf_node.table), None
+	with open(tableFile, 'r') as file: 
+		file.readline()
+		for line in file.readlines():
+			tup = tformat(tuple(line.strip().split(',')))
+			if tup[0] == leaf_node.primary_key:
+				tuple_data = tup
+				break
+	return hashlib.sha256(str(tuple_data).encode()).hexdigest() == leaf_node.data_hash
 
 
 def fail(msg="The data could not be verified, data may have been tampered with"):
@@ -102,7 +101,7 @@ def main(order_id, root_hash):
 	root_node_pk = None
 
 	# 1. find the root of the verification structure associated with this order
-	with open("Mock_DB/order_root_node.csv") as order_root_node:
+	with open("../Mock_DB/order_root_node.csv") as order_root_node:
 		order_root_node.readline()
 		for line in order_root_node.readlines():
 			tmp_order, tmp_root_node_pk = tuple(line.strip().split(','))
@@ -117,13 +116,11 @@ def main(order_id, root_hash):
 	# 2. Recursively load all Inner and Leaf Nodes into memory
 	loadChildren(root_node_pk, False)
 
-
 	# 3. Verify the root node matches the provided hash
 	
 	if root_hash != InnerNodes[root_node_pk].GetHash():
 		fail("Root hashes do not match, data may have been tampered with")
 		
-
 	# 4. Recursively verify the contents of all of the nodes
 
 	if not verifyChildren(root_node_pk):
