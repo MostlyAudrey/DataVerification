@@ -45,15 +45,3 @@ CREATE TABLE    IF NOT EXISTS verification.tb_relation_inner_node (
     root_inner_node       INTEGER NOT NULL REFERENCES verification.tb_inner_node
 );
 
-
-INSERT INTO verification.tb_relation(label) VALUES('Ordering');
-INSERT INTO verification.tb_relation_sub_table (relation, sub_table, primary_key)
-VALUES ( 1, 'tb_order', 'order_id' );
-
-INSERT INTO verification.tb_relation_sub_table (relation, sub_table, primary_key, join_table, join_key)
-VALUES
-( 1, 'tb_line_item', 'line_item_id', 1, 'order_id'   ),
-( 1, 'tb_product'  , 'product_id'  , 2, 'product_id' ),
-( 1, 'tb_client'   , 'client_id'   , 1, 'client_id'  )
-
-
