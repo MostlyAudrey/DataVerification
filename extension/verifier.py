@@ -10,7 +10,7 @@ from node import LeafNode, InnerNode
 host="localhost"
 dbname="DataVerification"
 user="postgres"
-pswd="" #put password here
+pswd="evan8989" #put password here
 ini = "dbname=" + dbname + " user=" + user + " password=" + pswd
 conn = psycopg2.connect(
 	host=host,
@@ -39,15 +39,20 @@ def tformat(tuple):
 def loadChildren(root_node_pk, is_leaf):
 	if root_node_pk is None or root_node_pk == "None": return
 	if not is_leaf:
-		lc, lc_hash, rc, rc_hash, num_leaves, children_are_leaves = tformat(tuple(linecache.getline(InnerNodeFile, root_node_pk + 2).strip().split(',')))
-		if rc == "None": rc, rc_hash = None, None
+		query = f"SELECT left_child, left_child_hash, right_child, right_child_hash, are_children_leaves FROM verification.tb_inner_node WHERE inner_node_id = {root_node_pk}"
+		cur.execute(query)
+		lc, lc_hash, rc, rc_hash, children_are_leaves = cur.fetchall()[0]
+		num_leaves = 2
+		if rc == "None": rc, rc_hash, num_leaves = None, None, 1
 		if root_node_pk in InnerNodes: return
 		InnerNodes[root_node_pk] = InnerNode(lc, lc_hash, rc, rc_hash, num_leaves, children_are_leaves)
 		loadChildren(lc, children_are_leaves )
 		if rc != "None":
 			loadChildren(rc, children_are_leaves)
 	else:
-		table, primary_key, data_hash = tformat(tuple(linecache.getline(LeafNodeFile, root_node_pk + 2).strip().split(',')))
+		query = f"SELECT table_name, primary_key_value, data_hash FROM verification.tb_leaf_node WHERE leaf_node_id = {root_node_pk}"
+		cur.execute(query)
+		table, primary_key, data_hash = cur.fetchall()[0]
 		LeafNodes[root_node_pk] = LeafNode(table, primary_key, data_hash)
 
 def verifyChildren(root_node_pk):
@@ -87,7 +92,8 @@ def verifyTupleData(leaf_node):
 
 	tuple_data = None
 	try:
-		query = f"SELECT * FROM {leaf_node.table} WHERE {getTablePKName(leaf_node.table)} = {leaf_node.primary_key}"
+		pk_name = leaf_node.table.replace("tb_", "") + "_id"
+		query = f"SELECT * FROM {leaf_node.table} WHERE {pk_name} = {leaf_node.primary_key}"
 		cur.execute(query)
 		tuple_data = cur.fetchall()[0]
 		conn.commit()
@@ -104,18 +110,19 @@ def fail(msg="The data could not be verified, data may have been tampered with")
 
 
 @click.command()
-@click.option('-o', '--order_id', required=True, prompt='Order ID', help='The pk of the order you are trying to verify')
-@click.option('-r', '--root_hash', required=True,  prompt='The data verification key provided when you created the order', help='This is the hash of the root of the data verification data structure')
-def main(order_id, root_hash):
+@click.option('-p', '--pk_id', required=True, prompt='Order ID', help='The pk of the relation you are trying to verify')
+@click.option('-r', '--relation_id', required=True, prompt='Relation ID', help='The relation you are trying to verify')
+@click.option('-h', '--root_hash', required=True,  prompt='The data verification key provided when you created the order', help='This is the hash of the root of the data verification data structure')
+def main(pk_id, relation_id, root_hash):
 
 	root_node_pk = None
 
 
 	try:
 		# 1. find the root of the verification structure associated with this order
-		query = f"SELECT * FROM temp_table WHERE primary_key_value = {order_id}"
+		query = f"SELECT rin.root_inner_node FROM verification.tb_relation_inner_node rin WHERE rin.relation_id = {relation_id} AND rin.primary_key_value = {pk_id}"
 		cur.execute(query)
-		tmp_order, tmp_root_node_pk = cur.fetchall()[0]
+		tmp_root_node_pk = cur.fetchall()[0][0]
 		root_node_pk = tmp_root_node_pk
 		conn.commit()
 	except:
