@@ -140,14 +140,6 @@ def main(pk_id, relation_id, root_hash):
 
 	# 3. Verify the root node matches the provided hash
 
-	# print(root_node_pk)
-	# print(InnerNodes[root_node_pk])
-	# print(InnerNodes[root_node_pk].lc_pk)
-	# print(InnerNodes[root_node_pk].lc_hash)
-	# print(InnerNodes[root_node_pk].rc_pk)
-	# print(InnerNodes[root_node_pk].rc_hash)
-	# print(InnerNodes[root_node_pk].num_leaf_nodes)
-	# print(InnerNodes[root_node_pk].children_are_leaves)
 	if root_hash != InnerNodes[root_node_pk].GetHash():
 		fail("Root hashes do not match, data may have been tampered with")
 		
