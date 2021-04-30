@@ -206,13 +206,13 @@ BEGIN
                 VALUES( 
                     my_new_nodes[my_while_counter],
                     (
-                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||right_child::VARCHAR||right_child_hash||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
+                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||COALESCE(right_child::VARCHAR,'')||COALESCE(right_child_hash,'')||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
                           FROM verification.tb_inner_node
                          WHERE inner_node_id = my_new_nodes[my_while_counter]
                     ),
                     my_new_nodes[my_while_counter+1],
                     (
-                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||right_child::VARCHAR||right_child_hash||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
+                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||COALESCE(right_child::VARCHAR,'')||COALESCE(right_child_hash,'')||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
                           FROM verification.tb_inner_node
                          WHERE inner_node_id = my_new_nodes[my_while_counter+1]
                     ),
@@ -225,7 +225,7 @@ BEGIN
                 VALUES( 
                     my_new_nodes[my_while_counter],
                     (
-                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||right_child::VARCHAR||right_child_hash||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
+                        SELECT substring(sha256((inner_node_id::VARCHAR||left_child::VARCHAR||left_child_hash||COALESCE(right_child::VARCHAR,'')||COALESCE(right_child_hash,'')||are_children_leaves::VARCHAR)::BYTEA)::VARCHAR,3,64)
                           FROM verification.tb_inner_node
                          WHERE inner_node_id = my_new_nodes[my_while_counter]
                     ),

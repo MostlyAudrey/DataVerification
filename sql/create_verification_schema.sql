@@ -29,7 +29,7 @@ CREATE TABLE    IF NOT EXISTS verification.tb_relation (
 CREATE SEQUENCE IF NOT EXISTS verification.sq_relation_sub_table;
 CREATE TABLE    IF NOT EXISTS verification.tb_relation_sub_table (
     relation_sub_table_id     INTEGER PRIMARY KEY DEFAULT nextval( 'verification.sq_relation_sub_table' ),
-    relation                  INTEGER REFERENCES verification.tb_relation(relation_id),
+    relation                  INTEGER NOT NULL REFERENCES verification.tb_relation(relation_id),
     sub_table                 name NOT NULL,
     primary_key               name NOT NULL,
     join_table                INTEGER REFERENCES verification.tb_relation_sub_table,
@@ -39,10 +39,10 @@ CREATE TABLE    IF NOT EXISTS verification.tb_relation_sub_table (
 
 CREATE SEQUENCE IF NOT EXISTS verification.sq_relation_inner_node;
 CREATE TABLE    IF NOT EXISTS verification.tb_relation_inner_node (
-    relation_map_id       INTEGER PRIMARY KEY DEFAULT nextval( 'verification.sq_relation_inner_node' ),
-    relation_id           INTEGER NOT NULL REFERENCES verification.tb_relation,
-    primary_key_value     INTEGER NOT NULL,
-    root_inner_node       INTEGER NOT NULL REFERENCES verification.tb_inner_node
+    relation_inner_node_id     INTEGER PRIMARY KEY DEFAULT nextval( 'verification.sq_relation_inner_node' ),
+    relation_id           	INTEGER NOT NULL REFERENCES verification.tb_relation,
+    primary_key_value     	INTEGER NOT NULL,
+    root_inner_node       	INTEGER NOT NULL REFERENCES verification.tb_inner_node
 );
 
 
