@@ -4,9 +4,9 @@ CREATE SEQUENCE IF NOT EXISTS verification.sq_inner_node;
 CREATE TABLE    IF NOT EXISTS verification.tb_inner_node (
     inner_node_id       INTEGER PRIMARY KEY DEFAULT nextval( 'verification.sq_inner_node' ),
     left_child          INTEGER NOT NULL,
-    left_child_hash     VARCHAR NOT NULL,
+    left_child_hash     CHAR(64) NOT NULL,
     right_child         INTEGER,
-    right_child_hash    VARCHAR,
+    right_child_hash    CHAR(64),
     are_children_leaves BOOlEAN NOT NULL DEFAULT FALSE
 );
 
@@ -15,7 +15,7 @@ CREATE TABLE    IF NOT EXISTS verification.tb_leaf_node (
     leaf_node_id        INTEGER PRIMARY KEY DEFAULT nextval( 'verification.sq_leaf_node' ),
     table_name          VARCHAR NOT NULL,
     primary_key_value   INTEGER NOT NULL,
-    data_hash           VARCHAR NOT NULL
+    data_hash           CHAR(64) NOT NULL
 );
 
 CREATE SEQUENCE IF NOT EXISTS verification.sq_relation;
@@ -32,7 +32,7 @@ CREATE TABLE    IF NOT EXISTS verification.tb_relation_sub_table (
     relation                  INTEGER REFERENCES verification.tb_relation(relation_id),
     sub_table                 name NOT NULL,
     primary_key               name NOT NULL,
-    join_table                name,
+    join_table                INTEGER REFERENCES verification.tb_relation_sub_table,
     join_key                  name,
     CONSTRAINT ct_join_check CHECK ( ( join_table IS NULL AND join_key IS NULL ) OR (join_table IS NOT NULL AND join_key IS NOT NULL ) )
 );
