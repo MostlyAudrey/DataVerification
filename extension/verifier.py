@@ -10,7 +10,7 @@ from node import LeafNode, InnerNode
 host="localhost"
 dbname="DataVerification"
 user="postgres"
-pswd="evan8989" #put password here
+pswd="" #put password here
 ini = "dbname=" + dbname + " user=" + user + " password=" + pswd
 try:
 	conn = psycopg2.connect(
