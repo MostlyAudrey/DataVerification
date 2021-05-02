@@ -94,16 +94,29 @@ def getTablePKName(relation_id):
 
 def verifyTupleData(leaf_node):
 	if leaf_node is None: return True
-
 	tuple_data = None
 	pk_name = primary_key_columns[leaf_node.table]
-	query = f"SELECT * FROM {leaf_node.table} WHERE {pk_name} = {leaf_node.primary_key}"
-	db_cursor.execute(query)
-	tuple_data = db_cursor.fetchall()[0]
-	return True
+	build_query = """
+	SELECT 'SELECT substring(sha256(('||
+           string_agg(attname, '::VARCHAR||')||
+           ')::BYTEA)::VARCHAR,3,64) FROM {} WHERE {} = {}'
+      FROM pg_attribute,pg_class
+     WHERE attrelid = pg_class.oid
+       AND attnum > 0
+       AND pg_class.relname='{}';""".format(leaf_node.table,pk_name,leaf_node.primary_key,leaf_node.table)
+	db_cursor.execute(build_query)
+	db_cursor.execute(db_cursor.fetchall()[0][0])
+	tuple_data_hash = db_cursor.fetchall()[0][0]
+	if tuple_data_hash != leaf_node.data_hash:
+		fail(f"tuple_data does not match leaf node hash for leaf_node:\n{leaf_node}")
+		return False;
+	return True;
 
 def fail(msg="The data could not be verified, data may have been tampered with"):
 	print(f"{bcolors.FAIL} "+msg+f" {bcolors.ENDC}")
+
+def fail_and_exit(msg="The data could not be verified, data may have been tampered with"):
+	fail(msg)
 	conn.close()
 	exit()
 
@@ -119,25 +132,25 @@ def main(pk_id, relation_id, root_hash):
 
 	# 1. find the root of the verification structure associated with this order
 	try:
-		query = f"SELECT rin.root_inner_node FROM verification.tb_relation_inner_node rin WHERE rin.relation_id = {relation_id} AND rin.primary_key_value = {pk_id} ORDER BY rin.relation_map_id DESC"
+		query = f"SELECT rin.root_inner_node FROM verification.tb_relation_inner_node rin WHERE rin.relation_id = {relation_id} AND rin.primary_key_value = {pk_id} ORDER BY rin.relation_inner_node_id DESC"
 		db_cursor.execute(query)
 		root_node_pk = db_cursor.fetchall()[0][0]
 	except:
-		fail("Unable to find order, make sure you have stamped this order")
+		fail_and_exit("Unable to find order, make sure you have stamped this order")
 	
 	if root_node_pk is None:
-		fail("No matching verification data structure found")
+		fail_and_exit("No matching verification data structure found")
 
 	# 2. Recursively load all Inner and Leaf Nodes into memory
 	loadChildren(root_node_pk, False)
 
 	# 3. Verify the root node matches the provided hash
 	if root_hash != InnerNodes[root_node_pk].GetHash(db_cursor):
-		fail("Root hashes do not match, data may have been tampered with")
+		fail_and_exit("Root hashes do not match, data may have been tampered with")
 		
 	# 4. Recursively verify the contents of all of the nodes
 	if not verifyChildren(root_node_pk):
-		fail()
+		fail_and_exit()
 
 	print(f"{bcolors.OKGREEN} The data has been verified, the order has not been tampered with")
 	conn.close()
